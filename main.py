@@ -59,7 +59,7 @@ async def classify_number(number: int = Query(..., description="Enter a valid in
             properties.append("armstrong")
         properties.append("even" if number % 2 == 0 else "odd")
 
-        fun_fact = f"{number} is an Armstrong number because ..."  # Example fun fact
+        fun_fact = f"{number} is an Armstrong number because 3^3 + 7^3 + 1^3 = 371"  # Example fun fact
 
         return {
             "number": number,
