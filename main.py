@@ -1,18 +1,25 @@
 # Import necessary modules
 from fastapi import FastAPI, Query  # FastAPI to create the API
 import requests  # Requests library to fetch data from Numbers API
+from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 
 # Initialize FastAPI app
 app = FastAPI()
 
-from fastapi import FastAPI, HTTPException, Request
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins, you can restrict this to specific domains like ["https://yourdomain.com"]
+    allow_credentials=True,
+    allow_methods=["GET"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Custom handler for validation errors
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-# Initialize FastAPI app
-app = FastAPI()
-
-# Custom handler for validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
@@ -44,8 +51,6 @@ def is_armstrong(n: int) -> bool:
     return sum(int(digit) ** len(str(n)) for digit in str(n)) == n
 
 # API endpoint definition
-from fastapi import HTTPException
-
 @app.get("/api/classify-number")
 async def classify_number(number: int = Query(..., description="Enter a valid integer to classify")):
     try:
