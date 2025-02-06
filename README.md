@@ -81,7 +81,7 @@ The API is available at `http://127.0.0.1:8080`.
 
 This API has been deployed to Render.com and is publicly accessible at:
 
-- **Base URL**: `https://number-classification-api.onrender.com`
+- **Base URL**: `https://chiclasweet-number-classification-api.onrender.com`
 - **Example Endpoint**:
     - Successful Response: `https://chiclasweet-number-classification-api.onrender.com/api/classify-number?number=371`
     - Error Response: `https://chiclasweet-number-classification-api.onrender.com/api/classify-number?number=abc`
