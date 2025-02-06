@@ -83,8 +83,8 @@ This API has been deployed to Render.com and is publicly accessible at:
 
 - **Base URL**: `https://number-classification-api.onrender.com`
 - **Example Endpoint**:
-    - Successful Response: `https://number-classification-api.onrender.com/api/classify-number?number=371`
-    - Error Response: `https://number-classification-api.onrender.com/api/classify-number?number=abc`
+    - Successful Response: `https://chiclasweet-number-classification-api.onrender.com/api/classify-number?number=371`
+    - Error Response: `https://chiclasweet-number-classification-api.onrender.com/api/classify-number?number=abc`
 
 ---
 
@@ -167,9 +167,9 @@ The Numbers API is used to fetch a fun fact related to the number, enriching the
 ## **Testing**
 
 1. Tested with valid numbers:
-    - `https://number-classification-api.onrender.com/api/classify-number?number=371`
+    - `https://chiclasweet-number-classification-api.onrender.com/api/classify-number?number=371`
 2. Tested with invalid inputs:
-    - `https://number-classification-api.onrender.com/api/classify-number?number=abc`
+    - `https://chiclasweet-number-classification-api.onrender.com/api/classify-number?number=abc`
 3. Tested edge cases:
     - Negative numbers
     - Large integers
