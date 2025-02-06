@@ -20,8 +20,8 @@ app.add_middleware(
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
-        status_code=400,  
-        content={"number": "alphabet", "error": True},  # Required error format
+        status_code=400,
+        content={"number": "alphabet", "error": True},  # Required error format for invalid request
     )
 
 # Function to check if a number is prime
@@ -50,30 +50,35 @@ def is_armstrong(n: float) -> bool:
 # API endpoint definition
 @app.get("/api/classify-number")
 async def classify_number(number: float = Query(..., description="Enter a valid number to classify")):
-    try:
-        properties = []
-        number_is_int = number.is_integer()  # Check if it's a whole number
+    # Check if the input is valid
+    if not isinstance(number, (int, float)):
+        raise HTTPException(status_code=400, detail={"number": "alphabet", "error": True})  # Invalid input
 
-        if number_is_int:  # Check only for whole numbers
-            number = int(number)
-            if is_prime(number):
-                properties.append("prime")
-            if is_perfect(number):
-                properties.append("perfect")
-            if is_armstrong(number):
-                properties.append("armstrong")
-            properties.append("even" if number % 2 == 0 else "odd")
+    # Initialize the properties list
+    properties = []
+    
+    # Check if the number is a whole number (integer)
+    number_is_int = number.is_integer()
+    
+    if number_is_int:  # Check only for whole numbers
+        number = int(number)
+        if is_prime(number):
+            properties.append("prime")
+        if is_perfect(number):
+            properties.append("perfect")
+        if is_armstrong(number):
+            properties.append("armstrong")
+        properties.append("even" if number % 2 == 0 else "odd")
 
-        response = {
-            "number": number,
-            "is_prime": is_prime(int(number)) if number_is_int else False,
-            "is_perfect": is_perfect(number),
-            "properties": properties,
-            "digit_sum": sum(int(digit) for digit in str(abs(int(number)))) if number_is_int else None,
-            "fun_fact": f"{number} is an Armstrong number because {'+'.join([f'{digit}^{len(str(number))}' for digit in str(number)])} = {number}"
-            if "armstrong" in properties else None,
-        }
+    response = {
+        "number": number,
+        "is_prime": is_prime(int(number)) if number_is_int else False,
+        "is_perfect": is_perfect(number),
+        "properties": properties,
+        "digit_sum": sum(int(digit) for digit in str(abs(int(number)))) if number_is_int else None,
+        "fun_fact": f"{number} is an Armstrong number because {'+'.join([f'{digit}^{len(str(number))}' for digit in str(number)])} = {number}"
+        if "armstrong" in properties else None,
+    }
 
-        return response
-    except ValueError:
-        raise HTTPException(status_code=400, detail={"number": "alphabet", "error": True})  # Required error format
+    # Return the response with status 200 OK for valid numbers
+    return JSONResponse(status_code=200, content=response)
