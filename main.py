@@ -1,79 +1,97 @@
-# Import necessary modules
-from fastapi import FastAPI, Query, HTTPException, Request
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Query, HTTPException
+from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 
-# Initialize FastAPI app
 app = FastAPI()
 
-# Add CORS middleware
+# Enable CORS for all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Custom handler for validation errors
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=400,  
-        content={"number": "alphabet", "error": True},  # Required error format
-    )
-
-# Function to check if a number is prime
 def is_prime(n: int) -> bool:
-    if n < 2:
+    """Check if a number is prime."""
+    if n < 2 or n % 1 != 0:
         return False
     for i in range(2, int(n ** 0.5) + 1):
         if n % i == 0:
             return False
     return True
 
-# Function to check if a number is a perfect number
-def is_perfect(n: float) -> bool:
-    if n < 1 or not n.is_integer():  # Ensure it's a positive whole number
+def is_perfect(n: int) -> bool:
+    """Check if a number is a perfect number. 0 should NOT be perfect."""
+    if n <= 0 or n % 1 != 0:
         return False
-    n = int(n)  # Convert to integer
-    return sum(i for i in range(1, n) if n % i == 0) == n
+    return sum(i for i in range(1, int(n)) if int(n) % i == 0) == int(n)
 
-# Function to check if a number is an Armstrong number
-def is_armstrong(n: float) -> bool:
-    if not n.is_integer():  # Armstrong numbers apply to whole numbers
+def is_armstrong(n: int) -> bool:
+    """Check if a number is an Armstrong number."""
+    if n % 1 != 0:
         return False
-    n = int(n)
-    return sum(int(digit) ** len(str(n)) for digit in str(n)) == n
+    digits = [int(d) for d in str(abs(int(n)))]
+    return sum(d ** len(digits) for d in digits) == abs(int(n))
 
-# API endpoint definition
+@app.get("/")
+def read_root():
+    """Handles requests to the root endpoint with a 400 Bad Request error."""
+    raise HTTPException(status_code=400, detail="Invalid endpoint. Use '/api/classify-number'")
+
 @app.get("/api/classify-number")
-async def classify_number(number: float = Query(..., description="Enter a valid number to classify")):
+def classify_number(number: str = Query(..., description="Number to classify")):
+    """API Endpoint to classify a number."""
+    
+    # Validate number format
+    if not number.replace(".", "").replace("-", "").isdigit():
+        return JSONResponse(
+            status_code=400,
+            content={"number": number, "error": True, "message": "Invalid number format"},
+        )
+    
     try:
-        properties = []
-        number_is_int = number.is_integer()  # Check if it's a whole number
-
-        if number_is_int:  # Check only for whole numbers
+        number = float(number)
+        if number % 1 == 0:
             number = int(number)
-            if is_prime(number):
-                properties.append("prime")
-            if is_perfect(number):
-                properties.append("perfect")
-            if is_armstrong(number):
-                properties.append("armstrong")
-            properties.append("even" if number % 2 == 0 else "odd")
+    except Exception:
+        return JSONResponse(
+            status_code=400,
+            content={"number": number, "error": True, "message": "Invalid number format"},
+        )
 
-        response = {
-            "number": number,
-            "is_prime": is_prime(int(number)) if number_is_int else False,
-            "is_perfect": is_perfect(number),
-            "properties": properties,
-            "digit_sum": sum(int(digit) for digit in str(abs(int(number)))) if number_is_int else None,
-            "fun_fact": f"{number} is an Armstrong number because {'+'.join([f'{digit}^{len(str(number))}' for digit in str(number)])} = {number}"
-            if "armstrong" in properties else None,
-        }
+    properties = []
+    
+    if is_armstrong(number):
+        properties.append("armstrong")
+    if number % 2 == 0:
+        properties.append("even")
+    else:
+        properties.append("odd")
 
-        return response
-    except ValueError:
-        raise HTTPException(status_code=400, detail={"number": "alphabet", "error": True})  # Required error format
+    if is_armstrong(number):
+        digits = [int(d) for d in str(abs(int(number)))]
+        powers = " + ".join([f"{d}^{len(digits)}" for d in digits])
+        fun_fact = f"{number} is an Armstrong number because {powers} = {number}"
+    else:
+        fun_fact = f"{number} is not an Armstrong number."
+
+    response = {
+        "number": number,
+        "is_prime": is_prime(number),
+        "is_perfect": is_perfect(number),
+        "properties": properties,
+        "digit_sum": sum(map(int, str(abs(int(number))))),
+        "fun_fact": fun_fact
+    }
+
+    return JSONResponse(status_code=200, content=response)
+
+@app.exception_handler(422)
+async def validation_exception_handler(request, exc):
+    """Ensures invalid inputs return a 400 Bad Request."""
+    return JSONResponse(
+        status_code=400,
+        content={"error": True, "message": "Invalid input. Please provide a valid number."},
+    )
